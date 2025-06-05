@@ -5,5 +5,5 @@ reporting_page = st.Page("reporting.py", title="민원 등록하기", icon=":mat
 confirmation_page = st.Page("confirmation.py", title="등록된 민원 확인하기", icon=":material/check_circle:")
 
 pg = st.navigation([homepage, reporting_page, confirmation_page])
-st.set_page_config(page_title="Homepage", page_icon=":material/home:")
+
 pg.run()
