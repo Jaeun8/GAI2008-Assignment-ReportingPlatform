@@ -3,7 +3,7 @@ import streamlit as st
 from folium.plugins import Draw
 from streamlit_folium import st_folium
 
-st.title('민원 신고하기')
+st.title('민원 등록하기')
 
 m = folium.Map(location=[37.564375, 126.938871], zoom_start=16)
 
