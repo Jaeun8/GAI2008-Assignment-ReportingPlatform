@@ -1,6 +1,5 @@
 import folium
 import streamlit as st
-from folium.plugins import Draw
 from streamlit_folium import st_folium
 
 st.title('📝 민원 등록하기')
