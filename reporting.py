@@ -13,3 +13,11 @@ if "marker_location" not in st.session_state:
     st.session_state.zoom = 16
 
 m = folium.Map(location=st.session_state.marker_location, zoom_start=st.session_state.zoom)
+
+marker = folium.Marker(
+    location=st.session_state.marker_location,
+    draggable=False
+)
+marker.add_to(m)
+
+map = st_folium(m, width=620, height=580, key="folium_map")
