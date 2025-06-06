@@ -32,9 +32,15 @@ with col1:
         tiles='OpenStreetMap'
     )
 
+    popup_html = """
+    <div style="font-family: Arial, sans-serif; white-space: nowrap; font-size: 14px;">
+        <b>민원 위치<br>
+    </div>
+    """
+
     folium.Marker(
         location=st.session_state.marker_location,
-        popup="민원 위치",
+        popup=folium.Popup(popup_html, max_width=200),
         tooltip="클릭하거나 드래그하여 위치를 변경하세요",
         draggable=True,
         icon=folium.Icon(color='red', icon='exclamation-sign')
