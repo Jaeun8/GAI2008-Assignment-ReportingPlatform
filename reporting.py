@@ -32,6 +32,15 @@ with col1:
         tiles='OpenStreetMap'
     )
 
+    folium.Marker(
+        location=st.session_state.marker_location,
+        popup="민원 위치",
+        tooltip="클릭하거나 드래그하여 위치를 변경하세요",
+        draggable=True,
+        icon=folium.Icon(color='red', icon='exclamation-sign')
+    ).add_to(m)
+    
+    m.add_child(folium.LatLngPopup())
     map_data = st_folium(
         m, 
         width="100%", 
@@ -78,13 +87,18 @@ with col2:
             else:
                 st.error("❌ 필수 항목을 모두 입력해주세요!")
 
-if map_data.get("last_clicked"):
-    lat, lng = map_data["last_clicked"]["lat"], map_data["last_clicked"]["lng"]
-    st.session_state.marker_location = [lat, lng]  # Update session state with new marker location
-    # Redraw the map immediately with the new marker location
-    m = folium.Map(location=st.session_state.marker_location, zoom_start=st.session_state.zoom)
-    folium.Marker(
-        location=st.session_state.marker_location,
-        draggable=False
-    ).add_to(m)
-    map = st_folium(m, width=620, height=580, key="folium_map")
+if map_data:
+    if map_data.get("last_object_dragged"):
+        new_lat = map_data["last_object_dragged"]["lat"]
+        new_lng = map_data["last_object_dragged"]["lng"]
+        if [new_lat, new_lng] != st.session_state.marker_location:
+            st.session_state.marker_location = [new_lat, new_lng]
+            st.rerun()
+    
+    elif map_data.get("last_clicked"):
+        new_lat = map_data["last_clicked"]["lat"]
+        new_lng = map_data["last_clicked"]["lng"]
+        if [new_lat, new_lng] != st.session_state.marker_location:
+            st.session_state.marker_location = [new_lat, new_lng]
+            st.rerun()
+
