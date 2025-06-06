@@ -11,6 +11,8 @@ if "marker_location" not in st.session_state:
 
 m = folium.Map(location=st.session_state.marker_location, zoom_start=st.session_state.zoom)
 
+col1, col2 = st.columns([2, 1])
+
 marker = folium.Marker(
     location=st.session_state.marker_location,
     draggable=False
