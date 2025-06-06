@@ -3,6 +3,18 @@ import streamlit as st
 from streamlit_folium import st_folium
 from datetime import date
 
+st.markdown("""
+<style>
+    .main .block-container {
+        max-width: 100%;
+        padding-top: 1rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+        padding-bottom: 1rem;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 st.title('📝 민원 등록하기')
 
 if "marker_location" not in st.session_state:
