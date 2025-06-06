@@ -5,9 +5,6 @@ from streamlit_folium import st_folium
 
 st.title('📝 민원 등록하기')
 
-def get_pos(lat, lng):
-    return lat, lng
-
 if "marker_location" not in st.session_state:
     st.session_state.marker_location = [37.564375, 126.938871]
     st.session_state.zoom = 16
