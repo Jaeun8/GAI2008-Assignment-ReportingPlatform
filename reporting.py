@@ -41,6 +41,7 @@ with col1:
     ).add_to(m)
     
     m.add_child(folium.LatLngPopup())
+
     map_data = st_folium(
         m, 
         width="100%", 
@@ -63,11 +64,15 @@ with col2:
             ["도로/교통", "환경/위생", "안전", "시설물", "기타"]
         )
         
-        content = st.text_area("민원 내용 *", placeholder="민원 내용을 입력하세요")
+        content = st.text_area(
+            "민원 내용 *", 
+            placeholder="민원 내용을 자세히 입력하세요",
+            height=150
+        )
         
-        report_date = st.date_input("작성 날짜", value=st.session_state.get('report_date', None))
+        report_date = st.date_input("작성 날짜", value=date.today())
         
-        submit_button = st.form_submit_button("민원 신청 하기")
+        submit_button = st.form_submit_button("민원 신청하기", use_container_width=True)
         
         if submit_button:
             if name and content:
@@ -102,3 +107,32 @@ if map_data:
             st.session_state.marker_location = [new_lat, new_lng]
             st.rerun()
 
+st.markdown("---")
+st.markdown("""
+### 📖 사용법 안내
+1. **위치 선택**: 지도에서 원하는 위치를 클릭하거나 마커를 드래그하여 위치를 설정하세요
+2. **정보 입력**: 우측 폼에서 민원 관련 정보를 입력하세요
+3. **신청 완료**: '민원 신청하기' 버튼을 클릭하여 민원을 접수하세요
+""")
+
+st.markdown("""
+<style>
+    .stForm {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        border: 1px solid #dee2e6;
+    }
+    
+    .stSuccess {
+        padding: 15px;
+        border-radius: 5px;
+    }
+    
+    .stInfo {
+        padding: 10px;
+        border-radius: 5px;
+        font-size: 14px;
+    }
+</style>
+""", unsafe_allow_html=True)
