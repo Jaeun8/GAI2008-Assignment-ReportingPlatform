@@ -7,10 +7,10 @@ st.markdown("""
 <style>
     .main .block-container {
         max-width: 100%;
-        padding-top: 1rem;
-        padding-left: 1rem;
-        padding-right: 1rem;
-        padding-bottom: 1rem;
+        padding-top: 2.5rem;
+        padding-left: 2.5rem;
+        padding-right: 2.5rem;
+        padding-bottom: 2.5rem;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -51,7 +51,7 @@ with col1:
     map_data = st_folium(
         m, 
         width="100%", 
-        height=500,
+        height=590,
         key="folium_map",
         returned_objects=["last_object_clicked", "last_clicked", "last_object_dragged"]
     )
