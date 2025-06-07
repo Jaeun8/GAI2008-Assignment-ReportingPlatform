@@ -141,7 +141,7 @@ with col1:
 
 with col2:
     st.subheader("📝 민원 정보 입력")
-
+    
     with st.expander("🔗 구글 시트 연결 상태", expanded=False):
         conn, worksheet_name = get_gsheet_connection()
         if conn:
@@ -247,6 +247,10 @@ st.markdown("""
         padding: 10px;
         border-radius: 5px;
         font-size: 14px;
+    }
+                    
+    .streamlit-expanderHeader {
+        font-weight: bold;
     }
 </style>
 """, unsafe_allow_html=True)
