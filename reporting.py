@@ -2,6 +2,25 @@ import folium
 import streamlit as st
 from streamlit_folium import st_folium
 from datetime import date
+import random
+
+class Complaint:
+    def __init__(self, location, author, complaint_type, content, report_date, receipt_number):
+        self.location = location
+        self.author = author
+        self.complaint_type = complaint_type
+        self.content = content
+        self.report_date = report_date
+        self.receipt_number = receipt_number
+
+    def __str__(self):
+        return f"""민원 정보:
+위치: {self.location}
+작성자: {self.author}
+유형: {self.complaint_type}
+내용: {self.content}
+작성일: {self.report_date}
+접수번호: {self.receipt_number}"""
 
 st.markdown("""
 <style>
@@ -51,7 +70,7 @@ with col1:
     map_data = st_folium(
         m, 
         width="100%", 
-        height=590,
+        height=655,
         key="folium_map",
         returned_objects=["last_object_clicked", "last_clicked", "last_object_dragged"]
     )
@@ -82,19 +101,22 @@ with col2:
         
         if submit_button:
             if name and content:
-                st.success("✅ 민원이 정상적으로 접수되었습니다!")
-                
-                st.markdown("### 📋 접수 정보")
-                st.write(f"**위치:** {lat:.6f}, {lng:.6f}")
-                st.write(f"**작성자:** {name}")
-                st.write(f"**유형:** {complaint_type}")
-                st.write(f"**내용:** {content}")
-                st.write(f"**작성일:** {report_date}")
-                
-                import random
                 receipt_number = f"CR{date.today().strftime('%Y%m%d')}{random.randint(1000, 9999)}"
-                st.write(f"**접수번호:** {receipt_number}")
-            
+
+                complaint_instance = Complaint(
+                    location=f"{lat:.6f}, {lng:.6f}",
+                    author=str(name).strip(),
+                    complaint_type=str(complaint_type),
+                    content=str(content).strip(),
+                    report_date=str(report_date),
+                    receipt_number=str(receipt_number)
+                )
+
+                st.success("✅ 민원이 정상적으로 접수되고 구글 시트에 저장되었습니다!")
+
+                st.markdown("### 📋 접수 정보")
+                st.text(str(complaint_instance))
+
             else:
                 st.error("❌ 필수 항목을 모두 입력해주세요!")
 
