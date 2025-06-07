@@ -3,6 +3,8 @@ import streamlit as st
 from streamlit_folium import st_folium
 from datetime import date
 import random
+from streamlit_gsheets import GSheetsConnection
+import pandas as pd
 
 class Complaint:
     def __init__(self, location, author, complaint_type, content, report_date, receipt_number):
@@ -21,6 +23,41 @@ class Complaint:
 내용: {self.content}
 작성일: {self.report_date}
 접수번호: {self.receipt_number}"""
+    
+def save_to_gsheet(complaint_instance):
+
+    try:
+        columns = ["접수번호", "위치", "작성자", "유형", "내용", "작성일"]
+        
+        conn = st.connection("gsheets", type=GSheetsConnection)
+
+        df = conn.read("gsheets", usecols=list(range(len(columns))), ttl=0)
+        
+        if df.empty or len(df.columns) == 0:
+            df = pd.DataFrame(columns=columns)
+        else:
+            if len(df.columns) >= len(columns):
+                df.columns = columns[:len(df.columns)]
+            else:
+                df = pd.DataFrame(columns=columns)
+        
+        new_row = {
+            "접수번호": complaint_instance.receipt_number,
+            "위치": complaint_instance.location,
+            "작성자": complaint_instance.author,
+            "유형": complaint_instance.complaint_type,
+            "내용": complaint_instance.content,
+            "작성일": complaint_instance.report_date
+        }
+        
+        new_df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+        
+        conn.update("gsheets", data=new_df)
+
+        return True, "성공적으로 저장되었습니다."
+
+    except Exception as e:
+        return False, f"저장 중 오류 발생: {str(e)}"
 
 st.markdown("""
 <style>
@@ -77,7 +114,7 @@ with col1:
 
 with col2:
     st.subheader("📝 민원 정보 입력")
-    
+
     lat, lng = st.session_state.marker_location
     st.info(f"**선택된 위치**\n위도: {lat:.6f}\n경도: {lng:.6f}")
     
@@ -111,12 +148,19 @@ with col2:
                     report_date=str(report_date),
                     receipt_number=str(receipt_number)
                 )
+                success, message = save_to_gsheet(complaint_instance)
+                
+                if success:
+                    st.success("✅ 민원이 정상적으로 접수되고 구글 시트에 저장되었습니다!")
 
-                st.success("✅ 민원이 정상적으로 접수되고 구글 시트에 저장되었습니다!")
-
-                st.markdown("### 📋 접수 정보")
-                st.text(str(complaint_instance))
-
+                    st.markdown("### 📋 접수 정보")
+                    st.text(str(complaint_instance))
+                else:
+                    st.error(f"❌ 저장 실패: {message}")
+                    
+                    st.warning("⚠️ 임시로 로컬에 저장된 민원 정보:")
+                    st.text(str(complaint_instance))
+                
             else:
                 st.error("❌ 필수 항목을 모두 입력해주세요!")
 
