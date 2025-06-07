@@ -23,15 +23,39 @@ class Complaint:
 내용: {self.content}
 작성일: {self.report_date}
 접수번호: {self.receipt_number}"""
-    
-def save_to_gsheet(complaint_instance):
 
+def get_gsheet_connection():
+    try:
+        conn = st.connection("gsheets", type=GSheetsConnection)
+        test_df = conn.read(worksheet="시트1", ttl=0)
+        return conn, "시트1"
+    except Exception as e1:
+        try:
+            conn = st.connection("gsheets", type=GSheetsConnection)
+            test_df = conn.read(worksheet="Sheet1", ttl=0)
+            return conn, "Sheet1"
+        except Exception as e2:
+            try:
+                conn = st.connection("gsheets", type=GSheetsConnection)
+                test_df = conn.read(ttl=0)
+                return conn, None
+            except Exception as e3:
+                st.error(f"구글 시트 연결 오류:\n- 시트1: {str(e1)}\n- Sheet1: {str(e2)}\n- 기본시트: {str(e3)}")
+                return None, None
+
+def save_to_gsheet(complaint_instance):
+    conn, worksheet_name = get_gsheet_connection()
+
+    if not conn:
+        return False, "구글 시트 연결에 실패했습니다."
+    
     try:
         columns = ["접수번호", "위치", "작성자", "유형", "내용", "작성일"]
         
-        conn = st.connection("gsheets", type=GSheetsConnection)
-
-        df = conn.read("gsheets", usecols=list(range(len(columns))), ttl=0)
+        if worksheet_name:
+            df = conn.read(worksheet=worksheet_name, usecols=list(range(len(columns))), ttl=0)
+        else:
+            df = conn.read(usecols=list(range(len(columns))), ttl=0)
         
         if df.empty or len(df.columns) == 0:
             df = pd.DataFrame(columns=columns)
@@ -52,8 +76,11 @@ def save_to_gsheet(complaint_instance):
         
         new_df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
         
-        conn.update("gsheets", data=new_df)
-
+        if worksheet_name:
+            conn.update(worksheet=worksheet_name, data=new_df)
+        else:
+            conn.update(data=new_df)
+        
         return True, "성공적으로 저장되었습니다."
 
     except Exception as e:
@@ -115,6 +142,20 @@ with col1:
 with col2:
     st.subheader("📝 민원 정보 입력")
 
+    with st.expander("🔗 구글 시트 연결 상태", expanded=False):
+        conn, worksheet_name = get_gsheet_connection()
+        if conn:
+            st.success(f"✅ 구글 시트 연결됨")
+            if worksheet_name:
+                st.info(f"📄 워크시트: {worksheet_name}")
+        else:
+            st.error("❌ 구글 시트 연결 실패")
+            st.markdown("""
+            **연결 확인사항:**
+            1. secrets.toml 파일의 구글 시트 설정 확인
+            2. 구글 시트 공유 권한 확인
+            3. 서비스 계정 권한 확인
+            """)
     lat, lng = st.session_state.marker_location
     st.info(f"**선택된 위치**\n위도: {lat:.6f}\n경도: {lng:.6f}")
     
@@ -185,6 +226,7 @@ st.markdown("""
 1. **위치 선택**: 지도에서 원하는 위치를 클릭하거나 마커를 드래그하여 위치를 설정하세요
 2. **정보 입력**: 우측 폼에서 민원 관련 정보를 입력하세요
 3. **신청 완료**: '민원 신청하기' 버튼을 클릭하여 민원을 접수하세요
+4. **자동 저장**: 접수된 민원은 자동으로 구글 시트에 저장됩니다
 """)
 
 st.markdown("""
