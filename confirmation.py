@@ -59,3 +59,27 @@ def parse_location(location_str):
         return lat, lng
     except:
         return None, None
+    
+st.markdown("""
+<style>
+    .main .block-container {
+        max-width: 100%;
+        padding-top: 2.5rem;
+        padding-left: 2.5rem;
+        padding-right: 2.5rem;
+        padding-bottom: 2.5rem;
+    }
+    .complaint-card {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid #dee2e6;
+        margin-bottom: 10px;
+    }
+    .complaint-header {
+        font-weight: bold;
+        color: #495057;
+        margin-bottom: 8px;
+    }
+</style>
+""", unsafe_allow_html=True)
