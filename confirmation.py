@@ -1,4 +1,7 @@
 import streamlit as st
+import pandas as pd
+import pydeck as pdk
+import plotly.express as px
 from streamlit_gsheets import GSheetsConnection
 
 def get_gsheet_connection():
@@ -19,3 +22,33 @@ def get_gsheet_connection():
             except Exception as e3:
                 st.error(f"구글 시트 연결 오류:\n- 시트1: {str(e1)}\n- Sheet1: {str(e2)}\n- 기본시트: {str(e3)}")
                 return None, None
+            
+def load_complaints():
+    conn, worksheet_name = get_gsheet_connection()
+    
+    if not conn:
+        return pd.DataFrame()
+    
+    try:
+        columns = ["접수번호", "위치", "작성자", "유형", "내용", "작성일"]
+        
+        if worksheet_name:
+            df = conn.read(worksheet=worksheet_name, usecols=list(range(len(columns))), ttl=0)
+        else:
+            df = conn.read(usecols=list(range(len(columns))), ttl=0)
+        
+        if df.empty or len(df.columns) == 0:
+            return pd.DataFrame(columns=columns)
+        
+        if len(df.columns) >= len(columns):
+            df.columns = columns[:len(df.columns)]
+        else:
+            df = pd.DataFrame(columns=columns)
+            
+        df = df.dropna(subset=['접수번호'])
+        
+        return df
+        
+    except Exception as e:
+        st.error(f"데이터 로드 중 오류 발생: {str(e)}")
+        return pd.DataFrame()
