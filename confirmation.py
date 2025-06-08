@@ -52,3 +52,10 @@ def load_complaints():
     except Exception as e:
         st.error(f"데이터 로드 중 오류 발생: {str(e)}")
         return pd.DataFrame()
+    
+def parse_location(location_str):
+    try:
+        lat, lng = map(float, location_str.split(', '))
+        return lat, lng
+    except:
+        return None, None
