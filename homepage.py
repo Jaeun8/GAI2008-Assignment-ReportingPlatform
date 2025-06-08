@@ -80,16 +80,16 @@ with st.container():
     with dev_col1:
         st.markdown("""
         <div style='font-size: 16px; line-height: 1.4; margin: 10px 0 0 0; max-width: 100%; padding: 15px; background-color: rgba(128, 128, 128, 0.1); border-radius: 10px;'>
-        <strong>🧑‍💻 개발자 1</strong><br>
-        <strong>📧 이메일:</strong> [이메일 주소1]
+        <strong>🧑‍💻 개발자 1:</strong> 정태현<br>
+        <strong>📧 이메일:</strong> taehyunj05@yonsei.ac.kr
         </div>
         """, unsafe_allow_html=True)
     
     with dev_col2:
         st.markdown("""
         <div style='font-size: 16px; line-height: 1.4; margin: 10px 0 0 0; max-width: 100%; padding: 15px; background-color: rgba(128, 128, 128, 0.1); border-radius: 10px;'>
-        <strong>🧑‍💻 개발자 2</strong><br>
-        <strong>📧 이메일:</strong> [이메일 주소2]
+        <strong>🧑‍💻 개발자 2:</strong> 김종호<br>
+        <strong>📧 이메일:</strong> bostondkd@yonsei.ac.kr
         </div>
         """, unsafe_allow_html=True)
     
