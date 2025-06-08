@@ -150,6 +150,35 @@ st.markdown("""
         padding-right: 2.5rem;
         padding-bottom: 2.5rem;
     }
+    /* 다크모드 지원 */
+    @media (prefers-color-scheme: dark) {
+        .stForm {
+            background-color: #23272f !important;
+            border: 1px solid #444950 !important;
+        }
+        .stSuccess {
+            background-color: #1e5631 !important;
+            color: #e6ffe6 !important;
+        }
+        .stInfo {
+            background-color: #22304a !important;
+            color: #cce0ff !important;
+        }
+    }
+    @media (prefers-color-scheme: light) {
+        .stForm {
+            background-color: #f8f9fa !important;
+            border: 1px solid #dee2e6 !important;
+        }
+        .stSuccess {
+            background-color: #d1e7dd !important;
+            color: #0f5132 !important;
+        }
+        .stInfo {
+            background-color: #e7f1ff !important;
+            color: #084298 !important;
+        }
+    }
 </style>
 """, unsafe_allow_html=True)
 
