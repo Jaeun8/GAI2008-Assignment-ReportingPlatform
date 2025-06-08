@@ -83,3 +83,13 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
+
+st.title('🔍 민원 조회 시스템')
+
+df = load_complaints()
+
+if df.empty:
+    st.warning("⚠️ 조회할 민원 데이터가 없습니다.")
+    st.stop()
+
+col1, col2 = st.columns([2, 1])
