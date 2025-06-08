@@ -16,7 +16,7 @@ class Complaint:
         self.receipt_number = receipt_number
 
     def __str__(self):
-        return f"""민원 정보:
+        return f"""
 위치: {self.location}
 작성자: {self.author}
 유형: {self.complaint_type}
