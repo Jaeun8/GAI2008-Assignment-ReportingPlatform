@@ -189,3 +189,49 @@ with col1:
         st.info(f"📊 총 {len(map_df)}개의 민원이 3D 기둥으로 표시되었습니다. 지도를 드래그하여 각도를 조절할 수 있습니다.")
     else:
         st.warning("⚠️ 지도에 표시할 유효한 위치 데이터가 없습니다.")
+
+with col2:
+    st.subheader("👤 작성자별 민원 조회")
+    
+    with st.expander("🔗 구글 시트 연결 상태", expanded=False):
+        conn, worksheet_name = get_gsheet_connection()
+        if conn:
+            st.success(f"✅ 구글 시트 연결됨")
+            if worksheet_name:
+                st.info(f"📄 워크시트: {worksheet_name}")
+        else:
+            st.error("❌ 구글 시트 연결 실패")
+    
+    with st.form("search_form"):
+        author_name = st.text_input("작성자명", placeholder="조회할 작성자명을 입력하세요")
+        search_button = st.form_submit_button("🔍 조회", use_container_width=True)
+        
+        if search_button and author_name:
+            author_complaints = df[df['작성자'].str.contains(author_name, na=False, case=False)]
+            
+            if not author_complaints.empty:
+                st.success(f"✅ '{author_name}'의 민원 {len(author_complaints)}건이 조회되었습니다.")
+                
+                for idx, complaint in author_complaints.iterrows():
+                    with st.container():
+                        st.markdown(f"""
+                        <div class="complaint-card">
+                            <div class="complaint-header">📋 {complaint['접수번호']}</div>
+                            <strong>유형:</strong> {complaint['유형']}<br/>
+                            <strong>작성일:</strong> {complaint['작성일']}<br/>
+                            <strong>내용:</strong> {complaint['내용']}<br/>
+                            <strong>위치:</strong> {complaint['위치']}
+                        </div>
+                        """, unsafe_allow_html=True)
+            else:
+                st.warning(f"⚠️ '{author_name}'의 민원을 찾을 수 없습니다.")
+    
+    st.markdown("---")
+    st.markdown("### 📈 전체 민원 통계")
+    st.metric("총 민원 수", len(df))
+    
+    if not df.empty:
+        type_counts = df['유형'].value_counts()
+        st.markdown("**유형별 민원 수:**")
+        for complaint_type, count in type_counts.items():
+            st.text(f"• {complaint_type}: {count}건")
