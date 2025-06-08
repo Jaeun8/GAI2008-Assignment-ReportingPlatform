@@ -70,16 +70,27 @@ st.markdown("""
         padding-bottom: 2.5rem;
     }
     .complaint-card {
-        background-color: #f8f9fa;
+        background-color: var(--background-color, #f8f9fa);
         padding: 15px;
         border-radius: 10px;
-        border: 1px solid #dee2e6;
+        border: 1px solid var(--secondary-background-color, #dee2e6);
         margin-bottom: 10px;
+        color: var(--text-color, #212529);
     }
     .complaint-header {
         font-weight: bold;
-        color: #495057;
+        color: var(--text-color, #495057);
         margin-bottom: 8px;
+    }
+    @media (prefers-color-scheme: dark) {
+        .complaint-card {
+            background-color: #23272d !important;
+            border: 1px solid #444950 !important;
+            color: #f1f3f6 !important;
+        }
+        .complaint-header {
+            color: #f8d36e !important;
+        }
     }
 </style>
 """, unsafe_allow_html=True)
