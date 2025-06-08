@@ -235,3 +235,65 @@ with col2:
         st.markdown("**유형별 민원 수:**")
         for complaint_type, count in type_counts.items():
             st.text(f"• {complaint_type}: {count}건")
+
+st.markdown("---")
+st.subheader("📊 날짜별 민원 접수 현황")
+
+if not df.empty:
+    df['작성일_parsed'] = pd.to_datetime(df['작성일'], errors='coerce')
+    df_valid_dates = df.dropna(subset=['작성일_parsed'])
+    
+    if not df_valid_dates.empty:
+        daily_complaints = df_valid_dates.groupby(df_valid_dates['작성일_parsed'].dt.date).size().reset_index()
+        daily_complaints.columns = ['날짜', '민원수']
+        
+        fig = px.bar(
+            daily_complaints, 
+            x='날짜', 
+            y='민원수',
+            title='날짜별 민원 접수 수',
+            labels={'날짜': '날짜', '민원수': '민원 수'},
+            color='민원수',
+            color_continuous_scale='Blues'
+        )
+        
+        fig.update_layout(
+            xaxis_title="날짜",
+            yaxis_title="민원 수",
+            showlegend=False,
+            height=400,
+            bargap=0.2,
+            xaxis=dict(
+                type='category',
+                tickangle=-45,
+                tickmode='linear'
+            )
+        )
+        
+        fig.update_traces(
+            width=0.6
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("평균 일일 민원", f"{daily_complaints['민원수'].mean():.1f}건")
+        with col2:
+            st.metric("최다 민원 일", f"{daily_complaints['민원수'].max()}건")
+        with col3:
+            max_date = daily_complaints.loc[daily_complaints['민원수'].idxmax(), '날짜']
+            st.metric("최다 민원 날짜", str(max_date))
+    else:
+        st.warning("⚠️ 유효한 날짜 데이터가 없어 차트를 생성할 수 없습니다.")
+else:
+    st.info("📊 민원 데이터가 없어 차트를 표시할 수 없습니다.")
+
+st.markdown("---")
+st.markdown("""
+### 📖 사용법 안내
+1. **지도 확인**: 좌측 지도에서 접수된 모든 민원의 위치를 확인할 수 있습니다
+2. **상세 정보**: 지도의 빨간 점을 클릭하면 해당 민원의 상세 정보를 볼 수 있습니다
+3. **작성자 조회**: 우측에서 작성자명을 입력하고 조회 버튼을 눌러 특정 작성자의 민원을 확인하세요
+4. **통계 확인**: 날짜별 민원 접수 현황과 전체 통계를 확인할 수 있습니다
+""")
