@@ -5,6 +5,8 @@ from datetime import date
 import random
 from streamlit_gsheets import GSheetsConnection
 import pandas as pd
+import smtplib
+from email.mime.text import MIMEText
 
 class Complaint:
     def __init__(self, location, author, complaint_type, content, report_date, receipt_number):
@@ -23,6 +25,59 @@ class Complaint:
 내용: {self.content}
 작성일: {self.report_date}
 접수번호: {self.receipt_number}"""
+
+def send_email_notification(complaint_instance):
+    try:
+        email_sender = st.secrets.get("email", {}).get("gmail", "")
+        email_password = st.secrets.get("email", {}).get("password", "")
+        admin_email = st.secrets.get("email", {}).get("admin_email", "")
+        
+        if not all([email_sender, email_password, admin_email]):
+            return False, "이메일 설정이 완료되지 않았습니다. secrets.toml에 이메일 설정을 확인해주세요."
+        
+        subject = f"🚨 새로운 민원 접수 알림 - {complaint_instance.receipt_number}"
+        
+        body = f"""
+새로운 민원이 접수되었습니다! 🚨
+
+📋 민원 상세 정보:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• 접수번호: {complaint_instance.receipt_number}
+• 작성자: {complaint_instance.author}
+• 민원 유형: {complaint_instance.complaint_type}
+• 위치: {complaint_instance.location}
+• 작성일: {complaint_instance.report_date}
+
+📝 민원 내용:
+{complaint_instance.content}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ 처리 안내:
+새로운 민원이 접수되었습니다. 빠른 시일 내에 검토 및 처리 부탁드립니다.
+구글 시트에서 상세 내용을 확인하실 수 있습니다.
+
+---
+이 이메일은 민원 접수 시스템에서 자동으로 발송되었습니다.
+발송 시간: {complaint_instance.report_date}
+        """
+        
+        msg = MIMEText(body)
+        msg['From'] = email_sender
+        msg['To'] = admin_email
+        msg['Subject'] = subject
+        
+        # SMTP 서버 연결 및 이메일 전송
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(email_sender, email_password)
+        server.sendmail(email_sender, admin_email, msg.as_string())
+        server.quit()
+        
+        return True, "이메일 알림이 성공적으로 전송되었습니다."
+        
+    except Exception as e:
+        return False, f"이메일 전송 실패: {str(e)}"
 
 def get_gsheet_connection():
     try:
@@ -142,7 +197,8 @@ with col1:
 with col2:
     st.subheader("📝 민원 정보 입력")
     
-    with st.expander("🔗 구글 시트 연결 상태", expanded=False):
+    with st.expander("🔗 시스템 연결 상태", expanded=False):
+
         conn, worksheet_name = get_gsheet_connection()
         if conn:
             st.success(f"✅ 구글 시트 연결됨")
@@ -150,12 +206,24 @@ with col2:
                 st.info(f"📄 워크시트: {worksheet_name}")
         else:
             st.error("❌ 구글 시트 연결 실패")
+        
+        email_config = st.secrets.get("email", {})
+        if email_config.get("gmail") and email_config.get("admin_email"):
+            st.success("✅ 이메일 알림 설정됨")
+            st.info(f"📧 관리자 이메일: {email_config.get('admin_email')}")
+        else:
+            st.warning("⚠️ 이메일 알림 설정 필요")
             st.markdown("""
-            **연결 확인사항:**
-            1. secrets.toml 파일의 구글 시트 설정 확인
-            2. 구글 시트 공유 권한 확인
-            3. 서비스 계정 권한 확인
+            **이메일 설정 안내:**
+            secrets.toml 파일에 다음 설정을 추가하세요:
+            ```
+            [email]
+            gmail = "your-email@gmail.com"
+            password = "your-app-password"
+            admin_email = "admin@example.com"
+            ```
             """)
+    
     lat, lng = st.session_state.marker_location
     st.info(f"**선택된 위치**\n위도: {lat:.6f}\n경도: {lng:.6f}")
     
@@ -189,15 +257,23 @@ with col2:
                     report_date=str(report_date),
                     receipt_number=str(receipt_number)
                 )
-                success, message = save_to_gsheet(complaint_instance)
+
+                save_success, save_message = save_to_gsheet(complaint_instance)
+
+                email_success, email_message = send_email_notification(complaint_instance)
                 
-                if success:
+                if save_success:
                     st.success("✅ 민원이 정상적으로 접수되고 구글 시트에 저장되었습니다!")
+
+                    if email_success:
+                        st.success("📧 관리자에게 이메일 알림이 전송되었습니다!")
+                    else:
+                        st.warning(f"⚠️ 이메일 전송 실패: {email_message}")
 
                     st.markdown("### 📋 접수 정보")
                     st.text(str(complaint_instance))
                 else:
-                    st.error(f"❌ 저장 실패: {message}")
+                    st.error(f"❌ 저장 실패: {save_message}")
                     
                     st.warning("⚠️ 임시로 로컬에 저장된 민원 정보:")
                     st.text(str(complaint_instance))
@@ -227,6 +303,21 @@ st.markdown("""
 2. **정보 입력**: 우측 폼에서 민원 관련 정보를 입력하세요
 3. **신청 완료**: '민원 신청하기' 버튼을 클릭하여 민원을 접수하세요
 4. **자동 저장**: 접수된 민원은 자동으로 구글 시트에 저장됩니다
+5. **이메일 알림**: 민원 접수 시 관리자에게 자동으로 이메일 알림이 전송됩니다
+
+### 📧 이메일 설정 방법
+이메일 알림 기능을 사용하려면 `secrets.toml` 파일에 다음과 같이 설정하세요:
+
+```toml
+[email]
+gmail = "your-email@gmail.com"
+password = "your-app-password"  # Gmail 앱 비밀번호
+admin_email = "admin@example.com"
+```
+
+**Gmail 사용 시 주의사항:**
+- 2단계 인증을 활성화하고 앱 비밀번호를 생성해야 합니다
+- 일반 비밀번호가 아닌 앱 비밀번호를 사용해야 합니다
 """)
 
 st.markdown("""
