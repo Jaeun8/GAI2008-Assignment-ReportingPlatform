@@ -93,3 +93,99 @@ if df.empty:
     st.stop()
 
 col1, col2 = st.columns([2, 1])
+
+with col1:
+    st.subheader("🗺️ 민원 위치 지도")
+    
+    map_data = []
+    for idx, row in df.iterrows():
+        lat, lng = parse_location(row['위치'])
+        if lat is not None and lng is not None:
+            map_data.append({
+                'lat': lat,
+                'lon': lng,
+                'receipt_number': row['접수번호'],
+                'author': row['작성자'],
+                'type': row['유형'],
+                'content': row['내용'][:50] + '...' if len(str(row['내용'])) > 50 else row['내용'],
+                'date': row['작성일']
+            })
+    
+    if map_data:
+        map_df = pd.DataFrame(map_data)
+        
+        type_colors = {
+            '도로/교통': [255, 0, 0, 200],
+            '환경/위생': [0, 255, 0, 200],
+            '안전': [255, 165, 0, 200],
+            '시설물': [0, 0, 255, 200],
+            '기타': [128, 0, 128, 200]
+        }
+        
+        map_df['color'] = map_df['type'].apply(lambda x: type_colors.get(x, [128, 128, 128, 200]))
+        map_df['height'] = 200
+
+        view_state = pdk.ViewState(
+            latitude=map_df['lat'].mean(),
+            longitude=map_df['lon'].mean(),
+            zoom=13,
+            pitch=45,
+            bearing=0
+        )
+        
+        layer = pdk.Layer(
+            'ColumnLayer',
+            data=map_df,
+            get_position='[lon, lat]',
+            get_fill_color='color',
+            get_elevation='height',
+            elevation_scale=1,
+            radius=50,
+            pickable=True,
+            auto_highlight=True
+        )
+        
+        tooltip = {
+            "html": """
+            <b>접수번호:</b> {receipt_number}<br/>
+            <b>작성자:</b> {author}<br/>
+            <b>유형:</b> {type}<br/>
+            <b>내용:</b> {content}<br/>
+            <b>작성일:</b> {date}
+            """,
+            "style": {
+                "backgroundColor": "rgba(0,0,0,0.8)",
+                "color": "white",
+                "fontSize": "12px",
+                "padding": "12px",
+                "borderRadius": "8px",
+                "boxShadow": "0 4px 8px rgba(0,0,0,0.3)"
+            }
+        }
+        
+        deck = pdk.Deck(
+            map_style='mapbox://styles/mapbox/light-v9',
+            initial_view_state=view_state,
+            layers=[layer],
+            tooltip=tooltip
+        )
+        
+        st.pydeck_chart(deck)
+        
+        st.markdown("### 🎨 민원 유형별 색상 범례")
+        legend_cols = st.columns(5)
+        type_colors_display = {
+            '도로/교통': '🔴',
+            '환경/위생': '🟢', 
+            '안전': '🟠',
+            '시설물': '🔵',
+            '기타': '🟣'
+        }
+        for idx, (complaint_type, emoji) in enumerate(type_colors_display.items()):
+            with legend_cols[idx]:
+                count = len(map_df[map_df['type'] == complaint_type])
+                st.markdown(f"{emoji} **{complaint_type}**<br/>({count}건)", unsafe_allow_html=True)
+        
+        st.info(f"📊 총 {len(map_df)}개의 민원이 3D 기둥으로 표시되었습니다. 지도를 드래그하여 각도를 조절할 수 있습니다.")
+    else:
+        st.warning("⚠️ 지도에 표시할 유효한 위치 데이터가 없습니다.")
